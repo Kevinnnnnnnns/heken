@@ -3,16 +3,20 @@
 // ══════════════════════════════════════════
 
 // ──────────────────────────────────────────
-// 🔑  CONFIGURE SUA CHAVE TMDB AQUI
-//  1. Acesse: https://www.themoviedb.org/settings/api
-//  2. Crie uma conta gratuita e gere sua API Key (v3 auth)
-//  3. Cole o valor abaixo substituindo o placeholder
+// 🔑  CHAVE TMDB CONFIGURADA
 // ──────────────────────────────────────────
-const TMDB_KEY = localStorage.getItem('netflixo_tmdb_key') || '';
+const TMDB_KEY = 'bedff5adccb225c280f32e314a46cd3e';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/';
 const LANG     = 'pt-BR';
+
+// Proxies CORS para evitar bloqueios do navegador
+const PROXIES = [
+  url => url, // Direto
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`
+];
 
 // Fontes de streaming (em ordem de prioridade)
 const STREAM_SOURCES = {
@@ -46,12 +50,7 @@ const GENRE_IDS = {
 /** Cache em memória */
 const _cache = new Map();
 
-/** Verifica se a chave está configurada */
-function hasApiKey() {
-  return TMDB_KEY && TMDB_KEY.length > 10;
-}
-
-/** Faz requisição TMDB */
+/** Faz requisição TMDB com fallback de proxy */
 async function fetchTMDB(endpoint, params = {}) {
   const key = localStorage.getItem('netflixo_tmdb_key') || TMDB_KEY;
 
@@ -63,25 +62,37 @@ async function fetchTMDB(endpoint, params = {}) {
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
   const qs  = new URLSearchParams({ api_key: key, language: LANG, ...params });
-  const url = `${BASE_URL}${endpoint}?${qs}`;
+  const rawUrl = `${BASE_URL}${endpoint}?${qs}`;
 
-  const ctrl = new AbortController();
-  const tid  = setTimeout(() => ctrl.abort(), 10000);
+  let lastError;
 
-  try {
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
+  // Tenta cada proxy até um funcionar
+  for (const buildProxyUrl of PROXIES) {
+    const url = buildProxyUrl(rawUrl);
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 7000);
 
-    if (res.status === 401) throw new Error('INVALID_API_KEY');
-    if (!res.ok) throw new Error(`HTTP_${res.status}`);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(tid);
 
-    const data = await res.json();
-    _cache.set(cacheKey, data);
-    return data;
-  } catch (e) {
-    clearTimeout(tid);
-    throw e;
+      if (res.status === 401) throw new Error('INVALID_API_KEY');
+      if (!res.ok) {
+        lastError = new Error(`HTTP_${res.status}`);
+        continue; // Tenta o próximo proxy
+      }
+
+      const data = await res.json();
+      _cache.set(cacheKey, data);
+      return data;
+    } catch (e) {
+      clearTimeout(tid);
+      lastError = e;
+      // Continua para o próximo proxy se houver erro de rede ou timeout
+    }
   }
+
+  throw lastError || new Error('FETCH_FAILED');
 }
 
 const TMDB = {
