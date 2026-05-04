@@ -41,7 +41,7 @@ const GENRE_IDS = { action: 28, comedy: 35, horror: 27, documentary: 99, animati
 const _cache = new Map();
 
 async function fetchTMDB(endpoint, params = {}) {
-  const key = localStorage.getItem('netflixo_tmdb_key') || TMDB_KEY;
+  const key = localStorage.getItem('heken_tmdb_key') || TMDB_KEY;
   if (!key) throw new Error('NO_API_KEY');
 
   const cacheKey = `${endpoint}::${JSON.stringify(params)}`;

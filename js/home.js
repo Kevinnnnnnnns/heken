@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
 
   // Verifica se a chave TMDB está configurada
-  const tmdbKey = localStorage.getItem('netflixo_tmdb_key');
+  const tmdbKey = localStorage.getItem('heken_tmdb_key');
   if (!tmdbKey || tmdbKey.length < 10) {
     showApiKeyBanner();
     return;

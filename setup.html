@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Netflixo — Configuração</title>
+  <title>Heken — Configuração</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
   <link rel="stylesheet" href="css/style.css">
   <style>
@@ -118,10 +118,10 @@
 </head>
 <body>
   <div class="setup-card">
-    <div class="setup-logo">Netflixo</div>
+    <div class="setup-logo">Heken</div>
 
     <h1>Configuração da API 🔑</h1>
-    <p>Para carregar filmes e séries, o Netflixo precisa de uma chave da <strong>TMDB API</strong> — completamente gratuita e leva menos de 2 minutos para criar.</p>
+    <p>Para carregar filmes e séries, o Heken precisa de uma chave da <strong>TMDB API</strong> — completamente gratuita e leva menos de 2 minutos para criar.</p>
 
     <div class="steps">
       <div class="step">
@@ -176,7 +176,7 @@
   Auth.requireAuth();
 
   // Checar se já tem chave salva
-  const saved = localStorage.getItem('netflixo_tmdb_key');
+  const saved = localStorage.getItem('heken_tmdb_key');
   if (saved && saved.length > 10) {
     document.getElementById('apiKeyInput').value = saved;
     showStatus('ok', '✓ Chave salva — clique em continuar');
@@ -226,7 +226,7 @@
     try {
       const ok = await validateKey(key);
       if (ok) {
-        localStorage.setItem('netflixo_tmdb_key', key);
+        localStorage.setItem('heken_tmdb_key', key);
         input.classList.add('valid');
         showStatus('ok', '✅ Chave válida! Redirecionando...');
         btn.querySelector('.btn-text').textContent = '🎬 Abrindo catálogo...';
@@ -239,7 +239,7 @@
       }
     } catch (e) {
       // Sem internet para validar — salva mesmo assim
-      localStorage.setItem('netflixo_tmdb_key', key);
+      localStorage.setItem('heken_tmdb_key', key);
       showStatus('ok', '✓ Chave salva (não foi possível validar agora)');
       setTimeout(goHome, 800);
     }

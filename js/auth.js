@@ -4,10 +4,10 @@
 
 const USERS = [
   { username: 'kevin',  password: '1234',      name: 'Kevin',  role: 'Master Dev', color: '#e50914' },
-  { username: 'admin',  password: 'netflixo',  name: 'Admin',  role: 'Admin',      color: '#0066cc' },
+  { username: 'admin',  password: 'heken',  name: 'Admin',  role: 'Admin',      color: '#0066cc' },
 ];
 
-const AUTH_KEY = 'netflixo_session';
+const AUTH_KEY = 'heken_session';
 
 const Auth = {
   /** Tenta logar com username+password. Retorna { ok, user, error } */
