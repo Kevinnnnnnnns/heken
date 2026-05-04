@@ -9,9 +9,12 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/';
 const LANG     = 'pt-BR';
 
-// Proxies CORS estáveis
+// Proxy de Imagem (weserv.nl é excelente e gratuito para bypassar bloqueios)
+const IMG_PROXY = (url) => url ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=https://via.placeholder.com/500x750?text=Sem+Imagem` : null;
+
+// Proxies CORS para JSON
 const PROXIES = [
-  url => url, // Direto
+  url => url, 
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`
@@ -50,37 +53,27 @@ async function fetchTMDB(endpoint, params = {}) {
       const url = buildProxy(rawUrl);
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
-      if (res.status === 401) {
-        // Se a chave for inválida, não adianta tentar outro proxy
-        throw new Error('INVALID_API_KEY');
-      }
-
-      if (!res.ok) {
-        lastError = new Error(`Status ${res.status}`);
-        continue;
-      }
+      if (res.status === 401) throw new Error('INVALID_API_KEY');
+      if (!res.ok) { lastError = new Error(`Status ${res.status}`); continue; }
 
       const data = await res.json();
-      if (data.success === false) {
-        lastError = new Error(data.status_message || 'API Error');
-        continue;
-      }
+      if (data.success === false) { lastError = new Error(data.status_message || 'API Error'); continue; }
 
       _cache.set(cacheKey, data);
       return data;
     } catch (e) {
       if (e.message === 'INVALID_API_KEY') throw e;
       lastError = e;
-      console.warn(`Proxy falhou: ${buildProxy.name || 'fallback'}`, e);
     }
   }
-
   throw lastError || new Error('FETCH_FAILED');
 }
 
 const TMDB = {
-  poster  : (path, size = 'w342')  => path ? `${IMG_BASE}${size}${path}` : null,
-  backdrop: (path, size = 'w1280') => path ? `${IMG_BASE}${size}${path}` : null,
+  // Aplicamos o proxy weserv.nl em todas as imagens
+  poster  : (path, size = 'w342')  => path ? IMG_PROXY(`${IMG_BASE}${size}${path}`) : null,
+  backdrop: (path, size = 'w1280') => path ? IMG_PROXY(`${IMG_BASE}${size}${path}`) : null,
+  
   trending: (type = 'movie') => fetchTMDB(`/trending/${type}/week`),
   popular : (type = 'movie') => fetchTMDB(`/${type}/popular`),
   topRated: (type = 'movie') => fetchTMDB(`/${type}/top_rated`),
