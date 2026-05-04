@@ -9,7 +9,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/';
 const LANG     = 'pt-BR';
 
-// Proxy de Imagem (weserv.nl é excelente e gratuito para bypassar bloqueios)
+// Proxy de Imagem
 const IMG_PROXY = (url) => url ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=https://via.placeholder.com/500x750?text=Sem+Imagem` : null;
 
 // Proxies CORS para JSON
@@ -20,14 +20,19 @@ const PROXIES = [
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`
 ];
 
+// 🎬 Lista Expandida de Fontes de Streaming
+// Algumas podem estar bloqueadas na sua rede, por isso temos várias opções.
 const STREAM_SOURCES = {
   movie: [
-    id => `https://vidsrc.to/embed/movie/${id}`,
-    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,
-    id => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    id => `https://vidsrc.to/embed/movie/${id}`,           // Fonte 1 (Global)
+    id => `https://embed.su/embed/movie/${id}`,           // Fonte 2 (Alternativa)
+    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 3 (Backup)
+    id => `https://multiembed.mov/?video_id=${id}&tmdb=1`, // Fonte 4 (Multi)
+    id => `https://player.vidsrc.nl/embed/movie/${id}`,   // Fonte 5 (Mirror)
   ],
   tv: [
     (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
   ],
 };
@@ -70,7 +75,6 @@ async function fetchTMDB(endpoint, params = {}) {
 }
 
 const TMDB = {
-  // Aplicamos o proxy weserv.nl em todas as imagens
   poster  : (path, size = 'w342')  => path ? IMG_PROXY(`${IMG_BASE}${size}${path}`) : null,
   backdrop: (path, size = 'w1280') => path ? IMG_PROXY(`${IMG_BASE}${size}${path}`) : null,
   
