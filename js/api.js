@@ -23,17 +23,17 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 1 (Multi-Idioma)
-    id => `https://embed.su/embed/movie/${id}`,           // Fonte 2 (Multi-Idioma)
-    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 3 (Legendado Estável)
-    id => `https://vidlink.pro/movie/${id}`,              // Fonte 4 (Rápido)
+    id => `https://superflixapi.top/filme/${id}`,         // Fonte 1 (Dublado BR)
+    id => `https://embed.warezcdn.com/filme/${id}`,       // Fonte 2 (Dublado BR)
+    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 3 (Multi)
+    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 4 (Legendado Estável)
     id => `https://vidsrc.cc/v2/embed/movie/${id}`,       // Fonte 5 (Legendado 1080p)
   ],
   tv: [
+    (id, s, e) => `https://superflixapi.top/serie/${id}/${s}/${e}`,
+    (id, s, e) => `https://embed.warezcdn.com/serie/${id}/${s}/${e}`,
     (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
-    (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
-    (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
   ],
 };
@@ -94,7 +94,7 @@ const TMDB = {
   },
   streamSources: (type) => (STREAM_SOURCES[type] || STREAM_SOURCES.movie).length,
   streamSourceName: (idx) => {
-    const names = ["Multi-Idioma (Dub/Leg)", "Multi-Idioma 2", "Legendado (Estável)", "Legendado (Rápido)", "Legendado 1080p"];
+    const names = ["Dublado 1 (BR)", "Dublado 2 (BR)", "Multi-Idioma", "Legendado", "Legendado 1080p"];
     return names[idx % names.length];
   },
   formatRating: (v) => v ? v.toFixed(1) : '—',
