@@ -7,6 +7,28 @@ let heroIndex    = 0;
 let heroTimer    = null;
 let searchDebounce = null;
 
+const MyListManager = {
+  get() { return JSON.parse(localStorage.getItem('heken_mylist') || '[]'); },
+  add(item) {
+    const list = this.get();
+    if (!list.find(i => i.id === item.id)) {
+      list.push(item);
+      localStorage.setItem('heken_mylist', JSON.stringify(list));
+      showToast('Adicionado à Minha Lista');
+    }
+  },
+  remove(id) {
+    const list = this.get().filter(i => i.id !== id);
+    localStorage.setItem('heken_mylist', JSON.stringify(list));
+    showToast('Removido da Minha Lista');
+  },
+  has(id) { return !!this.get().find(i => i.id === id); },
+  toggle(item, btn) {
+    if (this.has(item.id)) { this.remove(item.id); btn.innerHTML = '<span>+</span> Minha Lista'; }
+    else { this.add(item); btn.innerHTML = '<span>✓</span> Na Lista'; }
+  }
+};
+
 // ── Init ────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
@@ -90,6 +112,11 @@ function renderHero(movie) {
   if (more) {
     more.onclick = () => openModal(movie.id, 'movie');
   }
+  const listBtn = document.getElementById('heroList');
+  if (listBtn) {
+    listBtn.innerHTML = MyListManager.has(movie.id) ? '<span>✓</span> Na Lista' : '<span>+</span> Minha Lista';
+    listBtn.onclick = () => MyListManager.toggle({id: movie.id, title: movie.title||movie.name, type: 'movie', poster_path: movie.poster_path, backdrop_path: movie.backdrop_path, vote_average: movie.vote_average, release_date: movie.release_date||movie.first_air_date}, listBtn);
+  }
 }
 
 function renderHeroDots() {
@@ -138,6 +165,11 @@ const SECTIONS = [
 async function loadAllSections() {
   const container = document.getElementById('contentArea');
   if (!container) return;
+
+  const myList = MyListManager.get();
+  if (myList.length > 0 && !SECTIONS.find(s => s.id === 'row-mylist')) {
+    SECTIONS.unshift({ id: 'row-mylist', label: '📌 Minha Lista', fetch: async () => ({results: MyListManager.get()}), type: 'mixed' });
+  }
 
   // Renderiza esqueletos
   container.innerHTML = SECTIONS.map(s => buildSectionSkeleton(s)).join('');
@@ -367,7 +399,7 @@ async function openModal(id, type) {
     const m = overlay.querySelector('.modal-meta');
     const g = overlay.querySelector('.modal-tags');
     const playBtn = overlay.querySelector('.modal-play-btn');
-    const moreBtn = overlay.querySelector('.modal-more-btn');
+    const listBtn = overlay.querySelector('.modal-list-btn');
 
     if (t) t.textContent  = title;
     if (o) o.textContent  = overview;
@@ -379,7 +411,48 @@ async function openModal(id, type) {
     `;
     if (g) g.innerHTML    = genres.map(gn => `<span class="modal-tag">${gn}</span>`).join('');
     if (playBtn) playBtn.onclick = () => { closeModal(); openPlayer(id, type, title, details.backdrop_path); };
-    if (moreBtn) moreBtn.onclick = () => { closeModal(); openPlayer(id, type, title, details.backdrop_path); };
+    if (listBtn) {
+      listBtn.innerHTML = MyListManager.has(id) ? '✓ Na Lista' : '+ Minha Lista';
+      listBtn.onclick = () => {
+        MyListManager.toggle({id, title, type, poster_path: details.poster_path, backdrop_path: details.backdrop_path, vote_average: details.vote_average, release_date: details.release_date||details.first_air_date}, listBtn);
+        // Refresh My List section if we are on home
+        const myListContainer = document.getElementById('carousel-row-mylist');
+        if (myListContainer) {
+           const s = SECTIONS.find(s => s.id === 'row-mylist');
+           if (s) loadSection(s);
+        }
+      };
+    }
+
+    // Cast
+    const castContainer = overlay.querySelector('.modal-cast-list');
+    if (castContainer && details.credits && details.credits.cast) {
+      const castHTML = details.credits.cast.slice(0, 10).map(actor => `
+        <div style="flex-shrink:0;text-align:center;width:80px;">
+          <div style="width:70px;height:70px;border-radius:50%;background:#333;margin:0 auto 8px;overflow:hidden;">
+            ${actor.profile_path ? `<img src="${TMDB.poster(actor.profile_path, 'w185')}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">?</div>'}
+          </div>
+          <div style="font-size:0.75rem;color:#ddd;line-height:1.2;">${actor.name}</div>
+          <div style="font-size:0.65rem;color:#888;line-height:1.2;margin-top:2px;">${actor.character}</div>
+        </div>
+      `).join('');
+      castContainer.innerHTML = castHTML || '<div style="color:#666;font-size:0.9rem;">Elenco indisponível.</div>';
+    }
+
+    // Similar
+    const similarContainer = overlay.querySelector('.modal-similar-list');
+    if (similarContainer && details.similar && details.similar.results) {
+      const similarHTML = details.similar.results.slice(0, 6).map(sim => {
+        const simTitle = escAttr(sim.title || sim.name || '');
+        const simImg = TMDB.poster(sim.poster_path, 'w342');
+        return `
+          <div style="cursor:pointer;border-radius:6px;overflow:hidden;position:relative;background:#222;aspect-ratio:2/3;" onclick="closeModal(); setTimeout(()=>openModal(${sim.id}, '${type}'), 300)">
+            ${simImg ? `<img src="${simImg}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="padding:10px;text-align:center;font-size:0.8rem;color:#888;height:100%;display:flex;align-items:center;">${escHtml(simTitle)}</div>`}
+          </div>
+        `;
+      }).join('');
+      similarContainer.innerHTML = similarHTML || '<div style="color:#666;font-size:0.9rem;">Nenhuma recomendação encontrada.</div>';
+    }
   } catch(e) {
     console.error('Modal failed:', e);
   }

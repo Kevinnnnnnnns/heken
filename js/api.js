@@ -23,16 +23,18 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://embed.su/embed/movie/${id}`,           // Fonte 1 (Muito estável)
-    id => `https://vidsrc.pro/embed/movie/${id}`,         // Fonte 2 (Nova)
-    id => `https://www.2embed.cc/embed/${id}`,           // Fonte 3 (Clássica)
-    id => `https://autoembed.to/movie/tmdb/${id}`,       // Fonte 4 (Auto)
-    id => `https://vidsrc.to/embed/movie/${id}`,         // Fonte 5 (Original)
+    id => `https://embed.warezcdn.com/filme/${id}`,       // Fonte 1 (Dublado BR)
+    id => `https://superflixapi.top/filme/${id}`,         // Fonte 2 (Dublado BR)
+    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 3 (Legendado Estável)
+    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 4 (Alternativa)
+    id => `https://vidsrc.cc/v2/embed/movie/${id}`,       // Fonte 5 (Legendado 1080p)
   ],
   tv: [
-    (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://autoembed.to/tv/tmdb/${id}/${s}/${e}`,
+    (id, s, e) => `https://embed.warezcdn.com/serie/${id}/${s}/${e}`,
+    (id, s, e) => `https://superflixapi.top/serie/${id}/${s}/${e}`,
+    (id, s, e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
+    (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
+    (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
   ],
 };
 
@@ -82,7 +84,7 @@ const TMDB = {
   topRated: (type = 'movie') => fetchTMDB(`/${type}/top_rated`),
   nowPlaying: () => fetchTMDB('/movie/now_playing'),
   byGenre: (id, type = 'movie') => fetchTMDB(`/discover/${type}`, { with_genres: id, sort_by: 'popularity.desc' }),
-  details: (id, type = 'movie') => fetchTMDB(`/${type}/${id}`),
+  details: (id, type = 'movie') => fetchTMDB(`/${type}/${id}`, { append_to_response: 'credits,similar' }),
   search: (q) => fetchTMDB('/search/multi', { query: q, include_adult: false }),
   seasons: (id, n) => fetchTMDB(`/tv/${id}/season/${n}`),
   streamUrl: (id, type, s, e, idx) => {
@@ -91,6 +93,10 @@ const TMDB = {
     return type === 'movie' ? f(id) : f(id, s, e);
   },
   streamSources: (type) => (STREAM_SOURCES[type] || STREAM_SOURCES.movie).length,
+  streamSourceName: (idx) => {
+    const names = ["Dublado 1 (BR)", "Dublado 2 (BR)", "Legendado (Estável)", "Legendado (Alternativo)", "Legendado 1080p"];
+    return names[idx % names.length];
+  },
   formatRating: (v) => v ? v.toFixed(1) : '—',
   formatYear: (s) => s ? s.slice(0, 4) : '',
   formatRuntime: (m) => {

@@ -102,6 +102,8 @@ function buildTvSelectors() {
 
   const seasonSel = document.getElementById('seasonSelect');
   const epSel     = document.getElementById('episodeSelect');
+  const prevBtn   = document.getElementById('prevEpBtn');
+  const nextBtn   = document.getElementById('nextEpBtn');
   if (!seasonSel || !epSel) return;
 
   seasonSel.innerHTML = Array.from({ length: totalSeasons }, (_, i) =>
@@ -120,10 +122,38 @@ function buildTvSelectors() {
     reloadFrame();
   });
 
+  prevBtn?.addEventListener('click', async () => {
+    if (currentEpisode > 1) {
+      currentEpisode--;
+      epSel.value = currentEpisode;
+      reloadFrame();
+    } else if (currentSeason > 1) {
+      currentSeason--;
+      seasonSel.value = currentSeason;
+      await buildEpisodes(true);
+      reloadFrame();
+    }
+  });
+
+  nextBtn?.addEventListener('click', async () => {
+    const totalEps = epSel.options.length;
+    if (currentEpisode < totalEps) {
+      currentEpisode++;
+      epSel.value = currentEpisode;
+      reloadFrame();
+    } else if (currentSeason < totalSeasons) {
+      currentSeason++;
+      seasonSel.value = currentSeason;
+      currentEpisode = 1;
+      await buildEpisodes();
+      reloadFrame();
+    }
+  });
+
   buildEpisodes();
 }
 
-async function buildEpisodes() {
+async function buildEpisodes(goToLast = false) {
   const epSel = document.getElementById('episodeSelect');
   if (!epSel) return;
   try {
@@ -132,12 +162,14 @@ async function buildEpisodes() {
     epSel.innerHTML = eps.map(ep =>
       `<option value="${ep.episode_number}">Ep. ${ep.episode_number}: ${ep.name}</option>`
     ).join('');
-    currentEpisode = 1;
-    epSel.value    = '1';
+    currentEpisode = goToLast ? eps.length : (goToLast === false ? 1 : currentEpisode);
+    epSel.value = currentEpisode;
   } catch {
     epSel.innerHTML = Array.from({ length: 20 }, (_, i) =>
       `<option value="${i+1}">Episódio ${i+1}</option>`
     ).join('');
+    if (goToLast === false) currentEpisode = 1;
+    epSel.value = currentEpisode;
   }
 }
 
@@ -147,7 +179,7 @@ function buildSourceBtns() {
   if (!wrap) return;
   const count = TMDB.streamSources(currentType);
   wrap.innerHTML = Array.from({ length: count }, (_, i) =>
-    `<button class="source-btn${i===currentSource?' active':''}" onclick="switchSource(${i})">Fonte ${i+1}</button>`
+    `<button class="source-btn${i===currentSource?' active':''}" onclick="switchSource(${i})">${TMDB.streamSourceName(i)}</button>`
   ).join('');
 }
 
