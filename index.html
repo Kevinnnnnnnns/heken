@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Netflixo — Sua plataforma de streaming premium. Assista filmes e séries quando quiser.">
+  <title>Netflixo — Entrar</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+<div class="login-page" id="loginPage">
+
+  <!-- Background -->
+  <div class="login-bg"></div>
+  <div class="login-glow login-glow-1"></div>
+  <div class="login-glow login-glow-2"></div>
+
+  <!-- Header -->
+  <header class="login-header">
+    <div class="login-logo">Netflixo</div>
+  </header>
+
+  <!-- Main -->
+  <main class="login-main">
+    <div class="login-card">
+      <h1>Entrar</h1>
+
+      <form id="loginForm" novalidate>
+        <!-- Username -->
+        <div class="form-group">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="username"
+            autocomplete="username"
+            spellcheck="false"
+            required
+          >
+          <label for="username">Usuário</label>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="senha"
+              autocomplete="current-password"
+              required
+            >
+            <label for="password">Senha</label>
+            <button type="button" class="toggle-password" id="togglePwd" aria-label="Mostrar senha">
+              Mostrar
+            </button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="login-error" id="loginError" role="alert"></div>
+
+        <!-- Submit -->
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span class="btn-text">Entrar</span>
+          <div class="btn-loader"></div>
+        </button>
+      </form>
+
+      <!-- Demo users -->
+      <div class="demo-users">
+        <div class="demo-label">Acesso rápido</div>
+
+        <button class="demo-user-btn" onclick="fillLogin('kevin','1234')">
+          <div class="user-icon">KE</div>
+          <div class="user-creds">
+            <strong>kevin</strong>
+            <span>Senha: 1234</span>
+          </div>
+        </button>
+
+        <button class="demo-user-btn" onclick="fillLogin('admin','netflixo')">
+          <div class="user-icon">AD</div>
+          <div class="user-creds">
+            <strong>admin</strong>
+            <span>Senha: netflixo</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="login-footer">
+    <p>Netflixo &copy; 2025 — Desenvolvido com 🔥</p>
+  </footer>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  // Redireciona se já logado
+  Auth.redirectIfAuth();
+
+  const form     = document.getElementById('loginForm');
+  const errEl    = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const pwdInput = document.getElementById('password');
+  const togglePwd= document.getElementById('togglePwd');
+
+  // Toggle password visibility
+  togglePwd.addEventListener('click', () => {
+    const isText = pwdInput.type === 'text';
+    pwdInput.type    = isText ? 'password' : 'text';
+    togglePwd.textContent = isText ? 'Mostrar' : 'Ocultar';
+  });
+
+  // Fill demo credentials
+  function fillLogin(user, pwd) {
+    document.getElementById('username').value = user;
+    pwdInput.value = pwd;
+    showError('');
+    document.getElementById('username').focus();
+  }
+
+  // Show/hide error
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.classList.toggle('visible', !!msg);
+    if (msg) {
+      document.getElementById('username').classList.toggle('error', true);
+      pwdInput.classList.toggle('error', true);
+      setTimeout(() => {
+        document.getElementById('username').classList.remove('error');
+        pwdInput.classList.remove('error');
+      }, 600);
+    }
+  }
+
+  // Form submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showError('');
+
+    const username = document.getElementById('username').value.trim();
+    const password = pwdInput.value;
+
+    if (!username || !password) {
+      showError('Preencha usuário e senha.');
+      return;
+    }
+
+    // Loading state
+    loginBtn.classList.add('loading');
+    loginBtn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 800)); // UX: simula loading
+
+    const { ok, error } = Auth.login(username, password);
+
+    if (ok) {
+      loginBtn.querySelector('.btn-text').textContent = '✓ Entrando...';
+      setTimeout(() => { window.location.href = 'home.html'; }, 400);
+    } else {
+      loginBtn.classList.remove('loading');
+      loginBtn.disabled = false;
+      showError(error);
+    }
+  });
+
+  // Enter key on username → focus password
+  document.getElementById('username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); pwdInput.focus(); }
+  });
+</script>
+</body>
+</html>

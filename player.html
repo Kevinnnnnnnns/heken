@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Netflixo Player — Assista filmes e séries em streaming.">
+  <title>Netflixo — Player</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+
+<div class="player-page" id="playerPage">
+
+  <!-- ─── HEADER ─────────────────────────── -->
+  <header class="player-header">
+    <button class="btn-back" id="backBtn" aria-label="Voltar">
+      <span>‹</span> Voltar
+    </button>
+
+    <div class="player-header-logo">Netflixo</div>
+
+    <div class="player-title-bar" style="margin-left:auto;text-align:right">
+      <div class="movie-title" id="playerMovieTitle">Carregando...</div>
+      <div class="movie-subtitle" id="playerMovieSubtitle"></div>
+    </div>
+
+    <div class="avatar-img" style="width:34px;height:34px;border-radius:5px;background:linear-gradient(135deg,var(--red),#9b2335);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;margin-left:16px">
+      <span class="avatar-initials">?</span>
+    </div>
+  </header>
+
+  <!-- ─── PLAYER MAIN ─────────────────────── -->
+  <main class="player-main">
+
+    <!-- Loading overlay -->
+    <div class="player-loading" id="playerLoading">
+      <div class="loading-logo">Netflixo</div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <div class="loading-text">Carregando stream...</div>
+    </div>
+
+    <!-- Unavailable overlay -->
+    <div class="unavailable-overlay" id="unavailableOverlay">
+      <div class="unavailable-icon">📡</div>
+      <div class="unavailable-title">Conteúdo indisponível nesta fonte</div>
+      <div class="unavailable-text">
+        Tente mudar de fonte abaixo ou aguarde um momento. O conteúdo pode estar temporariamente indisponível.
+      </div>
+      <div class="unavailable-actions">
+        <button class="btn-retry" id="retryBtn">Tentar outra fonte</button>
+        <button class="btn-go-back" id="unavailableBack">Voltar ao catálogo</button>
+      </div>
+    </div>
+
+    <!-- The iframe -->
+    <iframe
+      id="movieFrame"
+      allowfullscreen
+      allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+      referrerpolicy="origin"
+      title="Netflixo Player"
+    ></iframe>
+  </main>
+
+  <!-- ─── BOTTOM INFO PANEL ────────────────── -->
+  <div class="player-info-panel">
+    <div class="panel-left">
+      <div class="panel-logo">Netflixo</div>
+      <div class="panel-title" id="panelTitle">Carregando...</div>
+      <div class="panel-meta">
+        <span class="panel-rating" id="panelRating"></span>
+        <span class="panel-year"   id="panelYear"></span>
+        <span class="panel-genre"  id="panelGenre"></span>
+      </div>
+      <p class="panel-overview" id="panelOverview"></p>
+    </div>
+
+    <div class="panel-right">
+      <!-- TV selectors (shown only for series) -->
+      <div class="tv-selectors" id="tvSelectors" style="display:none">
+        <select class="tv-select" id="seasonSelect" aria-label="Temporada"></select>
+        <select class="tv-select" id="episodeSelect" aria-label="Episódio"></select>
+      </div>
+
+      <!-- Source switcher -->
+      <div>
+        <div class="panel-source-label">Fontes de streaming</div>
+        <div class="source-btns" id="sourceBtns"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /player-page -->
+
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/player.js"></script>
+</body>
+</html>

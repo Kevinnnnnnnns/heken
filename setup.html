@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netflixo — Configuração</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #0a0a0a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+
+    .setup-card {
+      background: rgba(20,20,20,0.98);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 48px 52px;
+      max-width: 540px;
+      width: 100%;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.9);
+      animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .setup-logo { font-size: 2rem; font-weight: 900; color: var(--red); letter-spacing: -1.5px; text-transform: uppercase; margin-bottom: 32px; }
+
+    .setup-card h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+    .setup-card p  { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 28px; }
+
+    .steps { margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
+
+    .step {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+    }
+
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--red); color: white;
+      font-size: 0.78rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text { font-size: 0.88rem; line-height: 1.5; color: var(--text-secondary); }
+    .step-text strong { color: white; }
+    .step-text a { color: var(--red); text-decoration: underline; text-decoration-color: rgba(229,9,20,0.4); }
+
+    .key-input-wrap {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .key-input {
+      width: 100%;
+      padding: 16px 100px 16px 18px;
+      background: rgba(40,40,40,0.9);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: white;
+      font-size: 0.9rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.5px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .key-input:focus { border-color: rgba(229,9,20,0.6); box-shadow: 0 0 0 3px rgba(229,9,20,0.12); }
+    .key-input.valid { border-color: rgba(70,211,105,0.5); }
+    .key-input.invalid { border-color: rgba(232,124,3,0.6); }
+
+    .key-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; color: var(--text-muted); font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: color 0.2s; cursor: pointer;
+    }
+    .key-toggle:hover { color: white; }
+
+    .key-status {
+      font-size: 0.8rem; min-height: 20px; margin-bottom: 16px; padding-left: 2px;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .key-status.show { opacity: 1; }
+    .key-status.ok   { color: #46d369; }
+    .key-status.err  { color: #e87c03; }
+    .key-status.loading { color: var(--text-muted); }
+
+    .save-btn {
+      width: 100%; height: 52px;
+      background: var(--red); color: white;
+      font-size: 1rem; font-weight: 700;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.25s; position: relative; overflow: hidden;
+    }
+    .save-btn:hover { background: #f40612; transform: translateY(-1px); box-shadow: 0 0 30px rgba(229,9,20,0.4); }
+    .save-btn:active { transform: scale(0.99); }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .save-btn .btn-loader {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.7s linear infinite; display: none;
+    }
+    .save-btn.loading .btn-text { display: none; }
+    .save-btn.loading .btn-loader { display: block; }
+
+    .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 24px 0; }
+
+    .skip-note {
+      font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.5;
+    }
+    .skip-note a { color: var(--text-secondary); cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.2); }
+    .skip-note a:hover { color: white; }
+  </style>
+</head>
+<body>
+  <div class="setup-card">
+    <div class="setup-logo">Netflixo</div>
+
+    <h1>Configuração da API 🔑</h1>
+    <p>Para carregar filmes e séries, o Netflixo precisa de uma chave da <strong>TMDB API</strong> — completamente gratuita e leva menos de 2 minutos para criar.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          Acesse <a href="https://www.themoviedb.org/signup" target="_blank">themoviedb.org/signup</a> e crie uma conta gratuita
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          Vá em <a href="https://www.themoviedb.org/settings/api" target="_blank">Configurações → API</a> e clique em <strong>"Create"</strong> → escolha <strong>"Developer"</strong>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          Copie a <strong>API Key (v3 auth)</strong> e cole abaixo
+        </div>
+      </div>
+    </div>
+
+    <div class="key-input-wrap">
+      <input
+        type="password"
+        id="apiKeyInput"
+        class="key-input"
+        placeholder="Cole sua API Key aqui..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="key-toggle" id="keyToggle" type="button">Mostrar</button>
+    </div>
+
+    <div class="key-status" id="keyStatus"></div>
+
+    <button class="save-btn" id="saveBtn" type="button">
+      <span class="btn-text">✓ Salvar e Continuar</span>
+      <div class="btn-loader"></div>
+    </button>
+
+    <div class="divider"></div>
+
+    <p class="skip-note">
+      Já configurou antes? <a onclick="goHome()">Ir direto para o catálogo</a><br>
+      A chave é salva localmente no seu navegador.
+    </p>
+  </div>
+
+<script src="js/auth.js"></script>
+<script>
+  Auth.requireAuth();
+
+  // Checar se já tem chave salva
+  const saved = localStorage.getItem('netflixo_tmdb_key');
+  if (saved && saved.length > 10) {
+    document.getElementById('apiKeyInput').value = saved;
+    showStatus('ok', '✓ Chave salva — clique em continuar');
+  }
+
+  // Toggle visibility
+  const input  = document.getElementById('apiKeyInput');
+  const toggle = document.getElementById('keyToggle');
+
+  toggle.addEventListener('click', () => {
+    const isPass = input.type === 'password';
+    input.type = isPass ? 'text' : 'password';
+    toggle.textContent = isPass ? 'Ocultar' : 'Mostrar';
+  });
+
+  // Status helper
+  function showStatus(type, msg) {
+    const el = document.getElementById('keyStatus');
+    el.textContent = msg;
+    el.className = `key-status show ${type}`;
+  }
+
+  // Validate key against TMDB
+  async function validateKey(key) {
+    const url = `https://api.themoviedb.org/3/configuration?api_key=${key}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    return res.ok;
+  }
+
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const key = input.value.trim();
+
+    if (!key || key.length < 10) {
+      showStatus('err', '⚠ Cole uma chave válida antes de continuar.');
+      input.classList.add('invalid');
+      return;
+    }
+
+    input.classList.remove('valid', 'invalid');
+
+    const btn = document.getElementById('saveBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    showStatus('loading', '⏳ Validando chave...');
+
+    try {
+      const ok = await validateKey(key);
+      if (ok) {
+        localStorage.setItem('netflixo_tmdb_key', key);
+        input.classList.add('valid');
+        showStatus('ok', '✅ Chave válida! Redirecionando...');
+        btn.querySelector('.btn-text').textContent = '🎬 Abrindo catálogo...';
+        setTimeout(goHome, 800);
+      } else {
+        input.classList.add('invalid');
+        showStatus('err', '❌ Chave inválida. Verifique e tente novamente.');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    } catch (e) {
+      // Sem internet para validar — salva mesmo assim
+      localStorage.setItem('netflixo_tmdb_key', key);
+      showStatus('ok', '✓ Chave salva (não foi possível validar agora)');
+      setTimeout(goHome, 800);
+    }
+  });
+
+  function goHome() {
+    window.location.href = 'home.html';
+  }
+</script>
+</body>
+</html>
