@@ -143,19 +143,17 @@ async function buildEpisodes() {
 
 // ── Source buttons ───────────────────────
 function buildSourceBtns() {
-  const wrap = document.getElementById('sourceBtns');
+  const wrap = document.getElementById('sourceOptions');
   if (!wrap) return;
   const count = TMDB.streamSources(currentType);
   wrap.innerHTML = Array.from({ length: count }, (_, i) =>
-    `<button class="source-btn${i===0?' active':''}" onclick="switchSource(${i})">Fonte ${i+1}</button>`
+    `<button class="source-btn${i===currentSource?' active':''}" onclick="switchSource(${i})">Fonte ${i+1}</button>`
   ).join('');
 }
 
 function switchSource(i) {
   currentSource = i;
-  document.querySelectorAll('.source-btn').forEach((b, idx) =>
-    b.classList.toggle('active', idx === i)
-  );
+  buildSourceBtns();
   reloadFrame();
 }
 
@@ -218,6 +216,26 @@ function initControls() {
     currentSource = (currentSource + 1) % TMDB.streamSources(currentType);
     buildSourceBtns();
     reloadFrame();
+  });
+
+  // Trailer button
+  document.getElementById('btnTrailer')?.addEventListener('click', async () => {
+    const loading = document.getElementById('playerLoading');
+    const frame   = document.getElementById('movieFrame');
+    if (!frame) return;
+
+    loading?.classList.remove('hidden');
+    const trailerUrl = await TMDB.getTrailer(currentId, currentType);
+    
+    if (trailerUrl) {
+      frame.src = trailerUrl;
+      document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btnTrailer').classList.add('active');
+    } else {
+      alert('Trailer não encontrado para este título.');
+    }
+    
+    setTimeout(() => loading?.classList.add('hidden'), 1000);
   });
 }
 

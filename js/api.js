@@ -97,5 +97,15 @@ const TMDB = {
     if (!m) return '';
     const h = Math.floor(m / 60);
     return h > 0 ? `${h}h ${m % 60}m` : `${m}m`;
+  },
+  async getTrailer(id, type = 'movie') {
+    try {
+      const data = await fetchTMDB(`/${type}/${id}/videos`, { language: 'pt-BR,en-US' });
+      const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+      return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0` : null;
+    } catch (e) {
+      console.warn('Falha ao buscar trailer:', e);
+      return null;
+    }
   }
 };
