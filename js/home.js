@@ -60,10 +60,10 @@ async function loadHero() {
     startHeroTimer();
   } catch (e) {
     if (e.message === 'NO_API_KEY' || e.message === 'INVALID_API_KEY') {
-      showApiKeyBanner();
+      showApiKeyBanner(e.message === 'INVALID_API_KEY');
     } else {
       console.error('Hero failed:', e);
-      document.getElementById('heroTitle').textContent = 'Erro ao carregar';
+      document.getElementById('heroTitle').textContent = 'Erro de Conexão';
     }
   }
 }
@@ -395,49 +395,33 @@ function closeModal() {
 function escHtml(str)  { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(str)  { return String(str).replace(/'/g,"\\'"); }
 
-function showApiKeyBanner() {
+function showApiKeyBanner(isInvalid = false) {
   // Esconde hero e content
   const hero = heroEl();
   const content = document.getElementById('contentArea');
   if (hero) hero.style.display = 'none';
   if (content) content.innerHTML = '';
 
+  const title = isInvalid ? 'Chave API Inválida ❌' : 'Configuração Necessária 🔑';
+  const desc = isInvalid 
+    ? 'A chave TMDB que você inseriu não foi reconhecida ou está desativada. Verifique se copiou corretamente.' 
+    : 'Para carregar os filmes e séries, você precisa de uma chave TMDB gratuita.';
+
   // Cria banner
   const banner = document.createElement('div');
-  banner.style.cssText = `
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 24px;
-  `;
+  banner.id = 'apiBanner';
+  banner.style.cssText = 'min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px;';
   banner.innerHTML = `
-    <div style="font-size:3rem;margin-bottom:20px">🔑</div>
-    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:12px">Configure sua API Key</h2>
-    <p style="color:var(--text-secondary);font-size:1rem;max-width:480px;line-height:1.7;margin-bottom:32px">
-      Para carregar os filmes e séries, você precisa de uma chave TMDB gratuita.
-      É rápido, leva menos de 2 minutos!
-    </p>
-    <button onclick="window.location.href='setup.html'" style="
-      padding: 16px 36px;
-      background: var(--red);
-      color: white;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.25s;
-    " onmouseover="this.style.background='#f40612'" onmouseout="this.style.background='var(--red)'">
-      🎬 Configurar agora
+    <div style="font-size:3rem;margin-bottom:20px">${isInvalid ? '🚫' : '🔑'}</div>
+    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:12px">${title}</h2>
+    <p style="color:var(--text-secondary);font-size:1rem;max-width:480px;line-height:1.7;margin-bottom:32px">${desc}</p>
+    <button onclick="window.location.href='setup.html'" style="padding: 16px 36px; background: var(--red); color: white; font-size: 1rem; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.25s;">
+      🎬 ${isInvalid ? 'Corrigir Chave' : 'Configurar agora'}
     </button>
-    <p style="margin-top:16px;color:var(--text-muted);font-size:0.82rem">
-      Já tem a chave? Acesse <a href="setup.html" style="color:var(--red)">setup.html</a> para inserir.
-    </p>
   `;
-  document.body.appendChild(banner);
+  if (!document.getElementById('apiBanner')) {
+    document.body.appendChild(banner);
+  }
 }
 
 function showToast(msg) {
