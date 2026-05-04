@@ -20,20 +20,19 @@ const PROXIES = [
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`
 ];
 
-// 🎬 Lista Expandida de Fontes de Streaming
-// Algumas podem estar bloqueadas na sua rede, por isso temos várias opções.
+// 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://vidsrc.to/embed/movie/${id}`,           // Fonte 1 (Global)
-    id => `https://embed.su/embed/movie/${id}`,           // Fonte 2 (Alternativa)
-    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 3 (Backup)
-    id => `https://multiembed.mov/?video_id=${id}&tmdb=1`, // Fonte 4 (Multi)
-    id => `https://player.vidsrc.nl/embed/movie/${id}`,   // Fonte 5 (Mirror)
+    id => `https://embed.su/embed/movie/${id}`,           // Fonte 1 (Muito estável)
+    id => `https://vidsrc.pro/embed/movie/${id}`,         // Fonte 2 (Nova)
+    id => `https://www.2embed.cc/embed/${id}`,           // Fonte 3 (Clássica)
+    id => `https://autoembed.to/movie/tmdb/${id}`,       // Fonte 4 (Auto)
+    id => `https://vidsrc.to/embed/movie/${id}`,         // Fonte 5 (Original)
   ],
   tv: [
-    (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
+    (id, s, e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://autoembed.to/tv/tmdb/${id}/${s}/${e}`,
   ],
 };
 
