@@ -10,6 +10,7 @@ let currentEpisode = 1;
 let totalSeasons   = 1;
 let controlsTimeout = null;
 let details        = null;
+let streamTimeout  = null;
 
 // ── Init ────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -69,6 +70,8 @@ async function loadDetails() {
     setEl('panelOverview', overview);
     setEl('playerMovieTitle', title);
     setEl('playerMovieSubtitle', `${year}${runtime ? ' · ' + runtime : ''}`);
+
+    document.title = `Assistir: ${title} - Heken`;
 
     // Backdrop do panel
     const backdrop = details.backdrop_path;
@@ -190,24 +193,39 @@ function switchSource(i) {
 }
 
 // ── Player ──────────────────────────────
+function showUnavailable() {
+  const loading = document.getElementById('playerLoading');
+  const overlay = document.getElementById('unavailableOverlay');
+  if (loading) loading.classList.add('hidden');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function hideUnavailable() {
+  const overlay = document.getElementById('unavailableOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 function loadPlayer() {
   const frame   = document.getElementById('movieFrame');
   const loading = document.getElementById('playerLoading');
 
   if (!frame) return;
 
+  hideUnavailable();
+  clearTimeout(streamTimeout);
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
   frame.src = url;
 
   // Mostra loading até o iframe carregar
   frame.addEventListener('load', () => {
+    clearTimeout(streamTimeout);
     setTimeout(() => {
       loading?.classList.add('hidden');
     }, 1200);
   }, { once: true });
 
-  // Timeout de segurança
-  setTimeout(() => loading?.classList.add('hidden'), 8000);
+  // Timeout de segurança: 12 segundos
+  streamTimeout = setTimeout(showUnavailable, 12000);
 }
 
 function reloadFrame() {
@@ -215,15 +233,18 @@ function reloadFrame() {
   const loading = document.getElementById('playerLoading');
   if (!frame) return;
 
+  hideUnavailable();
+  clearTimeout(streamTimeout);
   loading?.classList.remove('hidden');
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
   frame.src = url;
 
   frame.addEventListener('load', () => {
+    clearTimeout(streamTimeout);
     setTimeout(() => loading?.classList.add('hidden'), 1000);
   }, { once: true });
 
-  setTimeout(() => loading?.classList.add('hidden'), 8000);
+  streamTimeout = setTimeout(showUnavailable, 12000);
 }
 
 // ── Controls auto-hide ───────────────────

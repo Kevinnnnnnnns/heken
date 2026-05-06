@@ -27,6 +27,8 @@ async function openModal(id, type) {
     const title    = details.title || details.name || '';
     const overview = details.overview || 'Sem descrição disponível.';
     const year     = TMDB.formatYear(details.release_date || details.first_air_date);
+
+    document.title = title ? `${title} - Heken` : 'Heken — Início';
     const rating   = TMDB.formatRating(details.vote_average);
     const runtime  = TMDB.formatRuntime(details.runtime || (details.episode_run_time?.[0]));
     const genres   = (details.genres || []).map(g => g.name);
@@ -103,4 +105,5 @@ function closeModal() {
   const overlay = document.getElementById('modalOverlay');
   overlay?.classList.remove('open');
   document.body.style.overflow = '';
+  document.title = 'Heken — Início';
 }
