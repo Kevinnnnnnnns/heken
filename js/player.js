@@ -81,6 +81,19 @@ async function loadDetails() {
       );
     }
 
+    // Salva no histórico
+    HistoryManager.add({
+      id: currentId,
+      type: currentType,
+      title: title,
+      poster_path: details.poster_path,
+      backdrop_path: details.backdrop_path,
+      vote_average: details.vote_average,
+      release_date: details.release_date || details.first_air_date,
+      season: currentSeason,
+      episode: currentEpisode
+    });
+
     // TV: monta selects de temporada/episódio
     if (currentType === 'tv') {
       totalSeasons = details.number_of_seasons || 1;
@@ -238,6 +251,20 @@ function reloadFrame() {
   loading?.classList.remove('hidden');
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
   frame.src = url;
+
+  if (currentType === 'tv' && details) {
+    HistoryManager.add({
+      id: currentId,
+      type: currentType,
+      title: details.title || details.name,
+      poster_path: details.poster_path,
+      backdrop_path: details.backdrop_path,
+      vote_average: details.vote_average,
+      release_date: details.release_date || details.first_air_date,
+      season: currentSeason,
+      episode: currentEpisode
+    });
+  }
 
   frame.addEventListener('load', () => {
     clearTimeout(streamTimeout);

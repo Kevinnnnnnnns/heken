@@ -70,6 +70,11 @@ async function loadAllSections() {
     SECTIONS.unshift({ id: 'row-mylist', label: '📌 Minha Lista', fetch: async () => ({results: MyListManager.get()}), type: 'mixed' });
   }
 
+  const history = HistoryManager.get();
+  if (history.length > 0 && !SECTIONS.find(s => s.id === 'row-history')) {
+    SECTIONS.unshift({ id: 'row-history', label: '⏱️ Continue Assistindo', fetch: async () => ({results: HistoryManager.get()}), type: 'mixed' });
+  }
+
   // Renderiza esqueletos vazios primeiro
   container.innerHTML = SECTIONS.map(s => buildSectionSkeleton(s)).join('');
 

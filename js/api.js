@@ -39,7 +39,7 @@ const STREAM_SOURCES = {
 };
 
 const GENRE_IDS = { action: 28, comedy: 35, horror: 27, documentary: 99, animation: 16, drama: 18, scifi: 878, thriller: 53, romance: 10749, family: 10751 };
-
+const GENRE_IDS_TV = { action: 10759, comedy: 35, documentary: 99, animation: 16, drama: 18, scifi: 10765, family: 10751, mystery: 9648 };
 const _cache = new Map();
 
 async function fetchTMDB(endpoint, params = {}) {
@@ -97,6 +97,7 @@ const TMDB = {
   topRated: (type = 'movie') => fetchTMDB(`/${type}/top_rated`),
   nowPlaying: () => fetchTMDB('/movie/now_playing'),
   byGenre: (id, type = 'movie') => fetchTMDB(`/discover/${type}`, { with_genres: id, sort_by: 'popularity.desc' }),
+  discover: (type, params) => fetchTMDB(`/discover/${type}`, { sort_by: 'popularity.desc', ...params }),
   details: (id, type = 'movie') => fetchTMDB(`/${type}/${id}`, { append_to_response: 'credits,similar' }),
   search: (q) => fetchTMDB('/search/multi', { query: q, include_adult: false }),
   seasons: (id, n) => fetchTMDB(`/tv/${id}/season/${n}`),

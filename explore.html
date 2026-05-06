@@ -3,30 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Heken — Catálogo de filmes e séries. Assista o que quiser, quando quiser.">
-  <title>Heken — Início</title>
+  <meta name="description" content="Heken — Explorar Filmes e Séries.">
+  <title>Heken — Explorar</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/home.css">
+  <style>
+    .explore-header { padding: 120px 4% 40px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, var(--bg) 100%); }
+    .explore-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 24px; }
+    .filters-bar { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 40px; }
+    .filter-select { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; transition: 0.2s; }
+    .filter-select:hover, .filter-select:focus { border-color: white; background: rgba(255,255,255,0.15); }
+    .filter-select option { background: var(--bg); color: white; }
+    .btn-search { background: var(--red); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-search:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 0 4% 60px; }
+  </style>
 </head>
 <body>
 
 <!-- ─── NAVBAR ─────────────────────────────── -->
 <nav class="navbar" id="navbar">
   <div class="nav-left">
-    <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">Heken</div>
+    <div class="nav-logo" onclick="window.location.href='home.html'">Heken</div>
     <div class="nav-links">
-      <a href="#" class="active">Início</a>
+      <a href="home.html">Início</a>
       <a href="#" onclick="document.getElementById('searchToggle').click();return false;">Buscar</a>
-      <a href="explore.html">Explorar</a>
-      <a href="#row-trending-movie">Filmes</a>
-      <a href="#row-trending-tv">Séries</a>
+      <a href="explore.html" class="active">Explorar</a>
     </div>
   </div>
 
   <div class="nav-right">
-    <!-- Search -->
     <div class="search-bar" id="searchBar">
       <button class="search-toggle" id="searchToggle" aria-label="Abrir busca">🔍</button>
       <div class="search-input-wrap">
@@ -35,8 +43,6 @@
         <button class="search-close" id="searchClose" aria-label="Fechar busca">✕</button>
       </div>
     </div>
-
-    <!-- Avatar + dropdown -->
     <div class="nav-avatar" tabindex="0">
       <button class="avatar-btn" aria-haspopup="true" aria-expanded="false">
         <div class="avatar-img"><span class="avatar-initials">?</span></div>
@@ -60,75 +66,69 @@
 
 <div class="navbar-gradient"></div>
 
-<!-- ─── HERO ────────────────────────────────── -->
-<section class="hero" id="hero">
-  <div class="hero-bg" id="heroBg"></div>
-
-  <div class="hero-content">
-    <div class="hero-badge">🔥 Em Alta</div>
-    <h1 class="hero-title" id="heroTitle">Carregando...</h1>
-    <div class="hero-meta">
-      <span class="hero-rating">⭐ <span id="heroRating">—</span></span>
-      <div class="hero-dot"></div>
-      <span class="hero-year" id="heroYear"></span>
-    </div>
-    <p class="hero-overview line-clamp-3" id="heroOverview"></p>
-    <div class="hero-actions">
-      <button class="btn-play" id="heroPlay">
-        <span>▶</span> Assistir
-      </button>
-      <button class="btn-more" id="heroMore">
-        <span>ℹ</span> Mais Informações
-      </button>
-      <button class="btn-list" id="heroList" style="background:rgba(109,109,110,0.7);color:white;padding:12px 24px;border-radius:6px;font-weight:700;margin-left:12px;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:1.1rem;transition:0.2s">
-        <span>+</span> Minha Lista
-      </button>
-    </div>
+<!-- ─── EXPLORE HEADER ──────────────────────── -->
+<header class="explore-header">
+  <h1 class="explore-title">Explorar Catálogo</h1>
+  <div class="filters-bar">
+    <select id="filterType" class="filter-select">
+      <option value="movie">Filmes</option>
+      <option value="tv">Séries</option>
+    </select>
+    <select id="filterGenre" class="filter-select">
+      <option value="">Todos os Gêneros</option>
+      <option value="28">Ação</option>
+      <option value="35">Comédia</option>
+      <option value="27">Terror</option>
+      <option value="878">Ficção Científica</option>
+      <option value="18">Drama</option>
+    </select>
+    <select id="filterYear" class="filter-select">
+      <option value="">Qualquer Ano</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+      <option value="2022">2022</option>
+      <option value="2020">Anos 2020</option>
+      <option value="2010">Anos 2010</option>
+    </select>
+    <select id="filterSort" class="filter-select">
+      <option value="popularity.desc">Mais Populares</option>
+      <option value="vote_average.desc">Melhores Avaliações</option>
+      <option value="primary_release_date.desc">Lançamentos Recentes</option>
+    </select>
+    <button class="btn-search" id="btnFilterSearch">Filtrar Resultados</button>
   </div>
+</header>
 
-  <!-- Dots navigation -->
-  <div class="hero-skip">
-    <div class="hero-dots" id="heroDots"></div>
-  </div>
-</section>
-
-<!-- ─── CONTENT AREA ─────────────────────────── -->
-<main class="content-area" id="contentArea">
-  <!-- Seções injetadas pelo JS -->
+<main class="explore-grid" id="exploreGrid">
+  <!-- Resultados injetados via JS -->
 </main>
 
-<!-- ─── SEARCH RESULTS ─────────────────────── -->
+<!-- ─── SEARCH RESULTS OVERLAY ──────────────── -->
 <section id="searchResults">
   <p class="search-results-title" id="searchResultsTitle"></p>
   <div class="search-grid" id="searchGrid"></div>
 </section>
 
 <!-- ─── MODAL ───────────────────────────────── -->
-<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Detalhes do título">
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
   <div class="modal">
-    <!-- Modal hero image -->
     <div class="modal-hero">
-      <img class="modal-hero-img" src="" alt="Capa do título">
+      <img class="modal-hero-img" src="" alt="">
       <div class="modal-hero-actions">
         <button class="btn-play modal-play-btn">▶ Assistir</button>
         <button class="btn-list modal-list-btn" style="background:rgba(109,109,110,0.7);color:white;padding:10px 20px;border-radius:4px;font-weight:700;border:none;cursor:pointer;font-size:1rem;margin-left:10px;">+ Minha Lista</button>
       </div>
     </div>
-
     <button class="modal-close" onclick="closeModal()" aria-label="Fechar">✕</button>
-
-    <!-- Modal body -->
     <div class="modal-body">
       <h2 class="modal-title"></h2>
       <div class="modal-meta"></div>
       <p class="modal-overview"></p>
       <div class="modal-tags"></div>
-      
       <div class="modal-cast-section" style="margin-top:24px;">
         <h3 style="font-size:1.1rem;margin-bottom:12px;color:#fff;">Elenco</h3>
         <div class="modal-cast-list" style="display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;"></div>
       </div>
-      
       <div class="modal-similar-section" style="margin-top:24px;">
         <h3 style="font-size:1.1rem;margin-bottom:12px;color:#fff;">Títulos Semelhantes</h3>
         <div class="modal-similar-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:12px;"></div>
@@ -137,27 +137,11 @@
   </div>
 </div>
 
-<!-- ─── FOOTER ──────────────────────────────── -->
-<footer class="home-footer">
-  <div class="footer-logo">Heken</div>
-  <div class="footer-links">
-    <a href="#">Central de Ajuda</a>
-    <a href="#">Sobre</a>
-    <a href="#">Privacidade</a>
-    <a href="#">Termos de Uso</a>
-  </div>
-  <p>© 2025 Heken. Desenvolvido com ❤️ e muita cafeína.</p>
-  <p style="margin-top:6px;font-size:.72rem;color:#555">
-    Dados fornecidos por <a href="https://www.themoviedb.org" target="_blank" style="color:#777">TMDB</a>. Streaming via VidSrc.
-  </p>
-</footer>
-
 <script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/api.js"></script>
-<script src="js/hero.js"></script>
 <script src="js/search.js"></script>
 <script src="js/modal.js"></script>
-<script src="js/home.js"></script>
+<script src="js/explore.js"></script>
 </body>
 </html>

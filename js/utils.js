@@ -24,6 +24,19 @@ const MyListManager = {
   }
 };
 
+const HistoryManager = {
+  get() { return JSON.parse(localStorage.getItem('heken_history') || '[]'); },
+  add(item) {
+    let list = this.get();
+    // Remover se já existir para colocar no topo
+    list = list.filter(i => i.id !== item.id);
+    list.unshift(item); // Adiciona no início
+    // Limitar histórico para 20 itens
+    if (list.length > 20) list.pop();
+    localStorage.setItem('heken_history', JSON.stringify(list));
+  }
+};
+
 function escHtml(str)  { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(str)  { return String(str).replace(/'/g,"\\'"); }
 
