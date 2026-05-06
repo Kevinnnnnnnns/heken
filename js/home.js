@@ -1,33 +1,6 @@
 // ══════════════════════════════════════════
-//  HOME — Lógica da página principal
+//  HOME — Lógica Principal (Seções e UI)
 // ══════════════════════════════════════════
-
-let heroMovies   = [];
-let heroIndex    = 0;
-let heroTimer    = null;
-let searchDebounce = null;
-
-const MyListManager = {
-  get() { return JSON.parse(localStorage.getItem('heken_mylist') || '[]'); },
-  add(item) {
-    const list = this.get();
-    if (!list.find(i => i.id === item.id)) {
-      list.push(item);
-      localStorage.setItem('heken_mylist', JSON.stringify(list));
-      showToast('Adicionado à Minha Lista');
-    }
-  },
-  remove(id) {
-    const list = this.get().filter(i => i.id !== id);
-    localStorage.setItem('heken_mylist', JSON.stringify(list));
-    showToast('Removido da Minha Lista');
-  },
-  has(id) { return !!this.get().find(i => i.id === id); },
-  toggle(item, btn) {
-    if (this.has(item.id)) { this.remove(item.id); btn.innerHTML = '<span>+</span> Minha Lista'; }
-    else { this.add(item); btn.innerHTML = '<span>✓</span> Na Lista'; }
-  }
-};
 
 // ── Init ────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -42,11 +15,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initUser();
   initNavbar();
-  initSearch();
-  initModalClose();
+  
+  if (typeof initSearch === 'function') initSearch();
+  if (typeof initModalClose === 'function') initModalClose();
 
   await Promise.all([
-    loadHero(),
+    (typeof loadHero === 'function' ? loadHero() : Promise.resolve()),
     loadAllSections(),
   ]);
 });
@@ -70,81 +44,6 @@ function initNavbar() {
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 20);
   }, { passive: true });
-}
-
-// ── Hero Banner ─────────────────────────
-async function loadHero() {
-  try {
-    const data = await TMDB.trending('movie', 'week');
-    heroMovies = data.results.slice(0, 5);
-    renderHero(heroMovies[0]);
-    renderHeroDots();
-    startHeroTimer();
-  } catch (e) {
-    if (e.message === 'NO_API_KEY' || e.message === 'INVALID_API_KEY') {
-      showApiKeyBanner(e.message === 'INVALID_API_KEY');
-    } else {
-      console.error('Hero failed:', e);
-      document.getElementById('heroTitle').textContent = 'Erro de Conexão';
-    }
-  }
-}
-
-function renderHero(movie) {
-  if (!movie) return;
-  const bg    = document.getElementById('heroBg');
-  const title = document.getElementById('heroTitle');
-  const over  = document.getElementById('heroOverview');
-  const year  = document.getElementById('heroYear');
-  const rat   = document.getElementById('heroRating');
-  const play  = document.getElementById('heroPlay');
-  const more  = document.getElementById('heroMore');
-
-  if (bg)    bg.style.backgroundImage = `url('${TMDB.backdrop(movie.backdrop_path)}')`;
-  if (title) title.textContent = movie.title || movie.name || 'Sem título';
-  if (over)  over.textContent  = movie.overview || 'Sem descrição disponível.';
-  if (year)  year.textContent  = TMDB.formatYear(movie.release_date || movie.first_air_date);
-  if (rat)   rat.textContent   = TMDB.formatRating(movie.vote_average);
-
-  if (play) {
-    play.onclick = () => openPlayer(movie.id, 'movie', movie.title || movie.name, movie.backdrop_path);
-  }
-  if (more) {
-    more.onclick = () => openModal(movie.id, 'movie');
-  }
-  const listBtn = document.getElementById('heroList');
-  if (listBtn) {
-    listBtn.innerHTML = MyListManager.has(movie.id) ? '<span>✓</span> Na Lista' : '<span>+</span> Minha Lista';
-    listBtn.onclick = () => MyListManager.toggle({id: movie.id, title: movie.title||movie.name, type: 'movie', poster_path: movie.poster_path, backdrop_path: movie.backdrop_path, vote_average: movie.vote_average, release_date: movie.release_date||movie.first_air_date}, listBtn);
-  }
-}
-
-function renderHeroDots() {
-  const wrap = document.getElementById('heroDots');
-  if (!wrap) return;
-  wrap.innerHTML = heroMovies.map((_, i) =>
-    `<div class="hero-dot-item${i===0?' active':''}" data-i="${i}" onclick="goHero(${i})"></div>`
-  ).join('');
-}
-
-function goHero(i) {
-  heroIndex = i;
-  renderHero(heroMovies[i]);
-  document.querySelectorAll('.hero-dot-item').forEach((d, idx) =>
-    d.classList.toggle('active', idx === i)
-  );
-  resetHeroTimer();
-}
-
-function startHeroTimer() {
-  heroTimer = setInterval(() => {
-    goHero((heroIndex + 1) % heroMovies.length);
-  }, 6000);
-}
-
-function resetHeroTimer() {
-  clearInterval(heroTimer);
-  startHeroTimer();
 }
 
 // ── Sections ────────────────────────────
@@ -171,11 +70,30 @@ async function loadAllSections() {
     SECTIONS.unshift({ id: 'row-mylist', label: '📌 Minha Lista', fetch: async () => ({results: MyListManager.get()}), type: 'mixed' });
   }
 
-  // Renderiza esqueletos
+  // Renderiza esqueletos vazios primeiro
   container.innerHTML = SECTIONS.map(s => buildSectionSkeleton(s)).join('');
 
-  // Carrega cada seção
-  await Promise.all(SECTIONS.map(s => loadSection(s)));
+  // Lazy loading observer para carregar os itens reais sob demanda
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const sectionId = entry.target.id;
+        const section = SECTIONS.find(s => s.id === sectionId);
+        if (section && !section.loaded) {
+          section.loaded = true;
+          loadSection(section);
+        }
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '300px' });
+
+  // Começa a observar todas as seções recém renderizadas
+  SECTIONS.forEach(s => {
+    s.loaded = false;
+    const el = document.getElementById(s.id);
+    if (el) observer.observe(el);
+  });
 }
 
 function buildSectionSkeleton(section) {
@@ -264,243 +182,4 @@ function cardPlaceholder(title) {
 function scrollCarousel(sectionId, dir) {
   const c = document.getElementById(`carousel-${sectionId}`);
   if (c) c.scrollBy({ left: dir * c.clientWidth * 0.8, behavior: 'smooth' });
-}
-
-// ── Search ──────────────────────────────
-function initSearch() {
-  const toggleBtn   = document.getElementById('searchToggle');
-  const closeBtn    = document.getElementById('searchClose');
-  const searchBar   = document.getElementById('searchBar');
-  const input       = document.getElementById('searchInput');
-  const results     = document.getElementById('searchResults');
-  const contentArea = document.getElementById('contentArea');
-
-  toggleBtn?.addEventListener('click', () => {
-    searchBar.classList.add('open');
-    input.focus();
-  });
-
-  closeBtn?.addEventListener('click', () => {
-    searchBar.classList.remove('open');
-    input.value = '';
-    results.classList.remove('visible');
-    if (contentArea) contentArea.style.display = '';
-    heroEl()?.style.setProperty('display','');
-  });
-
-  input?.addEventListener('input', () => {
-    clearTimeout(searchDebounce);
-    const q = input.value.trim();
-    if (!q) {
-      results.classList.remove('visible');
-      if (contentArea) contentArea.style.display = '';
-      heroEl()?.style.setProperty('display','');
-      return;
-    }
-    searchDebounce = setTimeout(() => doSearch(q), 400);
-  });
-}
-
-function heroEl() { return document.getElementById('hero'); }
-
-async function doSearch(query) {
-  const results     = document.getElementById('searchResults');
-  const contentArea = document.getElementById('contentArea');
-  const hero        = heroEl();
-
-  results.classList.add('visible');
-  if (contentArea) contentArea.style.display = 'none';
-  if (hero) hero.style.display = 'none';
-
-  const titleEl = document.getElementById('searchResultsTitle');
-  const grid    = document.getElementById('searchGrid');
-
-  if (titleEl) titleEl.innerHTML = `Resultados para <strong>"${escHtml(query)}"</strong>`;
-  if (grid) grid.innerHTML = Array(12).fill(`<div class="skeleton-card skeleton"><div class="sk-img skeleton" style="aspect-ratio:2/3;height:220px;"></div></div>`).join('');
-
-  try {
-    const data = await TMDB.search(query);
-    const items = data.results.filter(i => i.media_type !== 'person' && (i.poster_path || i.backdrop_path));
-
-    if (!items.length) {
-      grid.innerHTML = `<div style="color:var(--text-muted);grid-column:1/-1;padding:40px 0;text-align:center;font-size:1rem;">
-        Nenhum resultado encontrado para "<strong style="color:white">${escHtml(query)}</strong>"
-      </div>`;
-      return;
-    }
-
-    grid.innerHTML = items.map(item => {
-      const type  = item.media_type === 'tv' ? 'tv' : 'movie';
-      const title = item.title || item.name || '';
-      const img   = TMDB.poster(item.poster_path, 'w342') || TMDB.backdrop(item.backdrop_path, 'w500');
-
-      return `<div class="movie-card" onclick="openPlayer(${item.id},'${type}','${escAttr(title)}','${item.backdrop_path||''}')"
-        style="width:100%" role="button" tabindex="0">
-        <div class="card-img-wrap" style="aspect-ratio:2/3;height:220px;">
-          ${img ? `<img class="card-img" src="${img}" alt="${escHtml(title)}" loading="lazy" style="object-position:top">` : cardPlaceholder(title)}
-        </div>
-        <div class="card-hover-info">
-          <div class="card-actions">
-            <button class="card-btn card-btn-play" onclick="event.stopPropagation();openPlayer(${item.id},'${type}','${escAttr(title)}','${item.backdrop_path||''}')">▶</button>
-          </div>
-          <div class="card-title-text">${escHtml(title)}</div>
-          <div class="card-genres"><span class="card-genre">${type==='tv'?'Série':'Filme'}</span><span class="card-genre">⭐ ${TMDB.formatRating(item.vote_average)}</span></div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    console.error('Search failed:', e);
-    grid.innerHTML = `<div style="color:var(--text-muted);grid-column:1/-1;padding:40px 0;text-align:center">Erro ao buscar. Tente novamente.</div>`;
-  }
-}
-
-// ── Player nav ──────────────────────────
-function openPlayer(id, type, title, backdrop) {
-  const params = new URLSearchParams({ id, type, title: title||'', backdrop: backdrop||'' });
-  window.location.href = `player.html?${params}`;
-}
-
-// ── Modal ───────────────────────────────
-function initModalClose() {
-  const overlay = document.getElementById('modalOverlay');
-  overlay?.addEventListener('click', e => {
-    if (e.target === overlay) closeModal();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
-  });
-}
-
-async function openModal(id, type) {
-  const overlay = document.getElementById('modalOverlay');
-  if (!overlay) return;
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  // Reset
-  overlay.querySelector('.modal-title')?.replaceChildren();
-  overlay.querySelector('.modal-overview')?.replaceChildren();
-
-  try {
-    const [details] = await Promise.all([TMDB.details(id, type)]);
-    const title    = details.title || details.name || '';
-    const overview = details.overview || 'Sem descrição disponível.';
-    const year     = TMDB.formatYear(details.release_date || details.first_air_date);
-    const rating   = TMDB.formatRating(details.vote_average);
-    const runtime  = TMDB.formatRuntime(details.runtime || (details.episode_run_time?.[0]));
-    const genres   = (details.genres || []).map(g => g.name);
-    const backdrop = TMDB.backdrop(details.backdrop_path, 'w1280');
-
-    const heroImg  = overlay.querySelector('.modal-hero-img');
-    if (heroImg && backdrop) heroImg.src = backdrop;
-
-    const t = overlay.querySelector('.modal-title');
-    const o = overlay.querySelector('.modal-overview');
-    const m = overlay.querySelector('.modal-meta');
-    const g = overlay.querySelector('.modal-tags');
-    const playBtn = overlay.querySelector('.modal-play-btn');
-    const listBtn = overlay.querySelector('.modal-list-btn');
-
-    if (t) t.textContent  = title;
-    if (o) o.textContent  = overview;
-    if (m) m.innerHTML    = `
-      <span class="modal-rating">⭐ ${rating}</span>
-      <span class="modal-year">${year}</span>
-      ${runtime ? `<span class="modal-runtime">${runtime}</span>` : ''}
-      <span style="color:var(--text-muted);font-size:.8rem">${type==='tv'?'Série':'Filme'}</span>
-    `;
-    if (g) g.innerHTML    = genres.map(gn => `<span class="modal-tag">${gn}</span>`).join('');
-    if (playBtn) playBtn.onclick = () => { closeModal(); openPlayer(id, type, title, details.backdrop_path); };
-    if (listBtn) {
-      listBtn.innerHTML = MyListManager.has(id) ? '✓ Na Lista' : '+ Minha Lista';
-      listBtn.onclick = () => {
-        MyListManager.toggle({id, title, type, poster_path: details.poster_path, backdrop_path: details.backdrop_path, vote_average: details.vote_average, release_date: details.release_date||details.first_air_date}, listBtn);
-        // Refresh My List section if we are on home
-        const myListContainer = document.getElementById('carousel-row-mylist');
-        if (myListContainer) {
-           const s = SECTIONS.find(s => s.id === 'row-mylist');
-           if (s) loadSection(s);
-        }
-      };
-    }
-
-    // Cast
-    const castContainer = overlay.querySelector('.modal-cast-list');
-    if (castContainer && details.credits && details.credits.cast) {
-      const castHTML = details.credits.cast.slice(0, 10).map(actor => `
-        <div style="flex-shrink:0;text-align:center;width:80px;">
-          <div style="width:70px;height:70px;border-radius:50%;background:#333;margin:0 auto 8px;overflow:hidden;">
-            ${actor.profile_path ? `<img src="${TMDB.poster(actor.profile_path, 'w185')}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">?</div>'}
-          </div>
-          <div style="font-size:0.75rem;color:#ddd;line-height:1.2;">${actor.name}</div>
-          <div style="font-size:0.65rem;color:#888;line-height:1.2;margin-top:2px;">${actor.character}</div>
-        </div>
-      `).join('');
-      castContainer.innerHTML = castHTML || '<div style="color:#666;font-size:0.9rem;">Elenco indisponível.</div>';
-    }
-
-    // Similar
-    const similarContainer = overlay.querySelector('.modal-similar-list');
-    if (similarContainer && details.similar && details.similar.results) {
-      const similarHTML = details.similar.results.slice(0, 6).map(sim => {
-        const simTitle = escAttr(sim.title || sim.name || '');
-        const simImg = TMDB.poster(sim.poster_path, 'w342');
-        return `
-          <div style="cursor:pointer;border-radius:6px;overflow:hidden;position:relative;background:#222;aspect-ratio:2/3;" onclick="closeModal(); setTimeout(()=>openModal(${sim.id}, '${type}'), 300)">
-            ${simImg ? `<img src="${simImg}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="padding:10px;text-align:center;font-size:0.8rem;color:#888;height:100%;display:flex;align-items:center;">${escHtml(simTitle)}</div>`}
-          </div>
-        `;
-      }).join('');
-      similarContainer.innerHTML = similarHTML || '<div style="color:#666;font-size:0.9rem;">Nenhuma recomendação encontrada.</div>';
-    }
-  } catch(e) {
-    console.error('Modal failed:', e);
-  }
-}
-
-function closeModal() {
-  const overlay = document.getElementById('modalOverlay');
-  overlay?.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ── Helpers ──────────────────────────────
-function escHtml(str)  { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(str)  { return String(str).replace(/'/g,"\\'"); }
-
-function showApiKeyBanner(isInvalid = false) {
-  // Esconde hero e content
-  const hero = heroEl();
-  const content = document.getElementById('contentArea');
-  if (hero) hero.style.display = 'none';
-  if (content) content.innerHTML = '';
-
-  const title = isInvalid ? 'Chave API Inválida ❌' : 'Configuração Necessária 🔑';
-  const desc = isInvalid 
-    ? 'A chave TMDB que você inseriu não foi reconhecida ou está desativada. Verifique se copiou corretamente.' 
-    : 'Para carregar os filmes e séries, você precisa de uma chave TMDB gratuita.';
-
-  // Cria banner
-  const banner = document.createElement('div');
-  banner.id = 'apiBanner';
-  banner.style.cssText = 'min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px;';
-  banner.innerHTML = `
-    <div style="font-size:3rem;margin-bottom:20px">${isInvalid ? '🚫' : '🔑'}</div>
-    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:12px">${title}</h2>
-    <p style="color:var(--text-secondary);font-size:1rem;max-width:480px;line-height:1.7;margin-bottom:32px">${desc}</p>
-    <button onclick="window.location.href='setup.html'" style="padding: 16px 36px; background: var(--red); color: white; font-size: 1rem; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.25s;">
-      🎬 ${isInvalid ? 'Corrigir Chave' : 'Configurar agora'}
-    </button>
-  `;
-  if (!document.getElementById('apiBanner')) {
-    document.body.appendChild(banner);
-  }
-}
-
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, 3000);
 }

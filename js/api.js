@@ -46,33 +46,46 @@ async function fetchTMDB(endpoint, params = {}) {
   const key = localStorage.getItem('heken_tmdb_key') || TMDB_KEY;
   if (!key) throw new Error('NO_API_KEY');
 
-  const cacheKey = `${endpoint}::${JSON.stringify(params)}`;
+  const cacheKey = `heken_tmdb::${endpoint}::${JSON.stringify(params)}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
+
+  try {
+    const sessionData = sessionStorage.getItem(cacheKey);
+    if (sessionData) {
+      const data = JSON.parse(sessionData);
+      _cache.set(cacheKey, data);
+      return data;
+    }
+  } catch (e) {}
 
   const qs  = new URLSearchParams({ api_key: key, language: LANG, ...params });
   const rawUrl = `${BASE_URL}${endpoint}?${qs}`;
 
-  let lastError;
+  const proxyPromises = PROXIES.map(async (buildProxy) => {
+    const url = buildProxy(rawUrl);
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
-  for (const buildProxy of PROXIES) {
-    try {
-      const url = buildProxy(rawUrl);
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (res.status === 401) throw new Error('INVALID_API_KEY');
+    if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      if (res.status === 401) throw new Error('INVALID_API_KEY');
-      if (!res.ok) { lastError = new Error(`Status ${res.status}`); continue; }
+    const data = await res.json();
+    if (data.success === false) throw new Error(data.status_message || 'API Error');
 
-      const data = await res.json();
-      if (data.success === false) { lastError = new Error(data.status_message || 'API Error'); continue; }
+    return data;
+  });
 
-      _cache.set(cacheKey, data);
-      return data;
-    } catch (e) {
-      if (e.message === 'INVALID_API_KEY') throw e;
-      lastError = e;
+  try {
+    const data = await Promise.any(proxyPromises);
+    _cache.set(cacheKey, data);
+    try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
+    return data;
+  } catch (err) {
+    if (err instanceof AggregateError) {
+      const hasInvalidKey = err.errors.some(e => e.message === 'INVALID_API_KEY');
+      if (hasInvalidKey) throw new Error('INVALID_API_KEY');
     }
+    throw new Error('FETCH_FAILED');
   }
-  throw lastError || new Error('FETCH_FAILED');
 }
 
 const TMDB = {
