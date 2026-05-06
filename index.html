@@ -27,21 +27,21 @@
   <!-- Main -->
   <main class="login-main">
     <div class="login-card">
-      <h1>Entrar</h1>
+      <h1 id="formTitle">Entrar</h1>
 
       <form id="loginForm" novalidate>
         <!-- Username -->
         <div class="form-group">
           <input
-            type="text"
+            type="email"
             id="username"
             name="username"
-            placeholder="username"
-            autocomplete="username"
+            placeholder="email@exemplo.com"
+            autocomplete="email"
             spellcheck="false"
             required
           >
-          <label for="username">Usuário</label>
+          <label for="username">E-mail</label>
         </div>
 
         <!-- Password -->
@@ -70,28 +70,12 @@
           <span class="btn-text">Entrar</span>
           <div class="btn-loader"></div>
         </button>
+
+        <div style="text-align:center; margin-top:24px; font-size:0.9rem;">
+           <span id="toggleText">Ainda não tem uma conta?</span> 
+           <a href="#" id="toggleMode" style="color:var(--red); font-weight:bold; text-decoration:none; margin-left:5px;">Criar conta</a>
+        </div>
       </form>
-
-      <!-- Demo users -->
-      <div class="demo-users">
-        <div class="demo-label">Acesso rápido</div>
-
-        <button class="demo-user-btn" onclick="fillLogin('kevin','1234')">
-          <div class="user-icon">KE</div>
-          <div class="user-creds">
-            <strong>kevin</strong>
-            <span>Senha: 1234</span>
-          </div>
-        </button>
-
-        <button class="demo-user-btn" onclick="fillLogin('admin','heken')">
-          <div class="user-icon">AD</div>
-          <div class="user-creds">
-            <strong>admin</strong>
-            <span>Senha: heken</span>
-          </div>
-        </button>
-      </div>
     </div>
   </main>
 
@@ -101,6 +85,9 @@
   </footer>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 <script src="js/auth.js"></script>
 <script>
   // Redireciona se já logado
@@ -119,14 +106,6 @@
     togglePwd.textContent = isText ? 'Mostrar' : 'Ocultar';
   });
 
-  // Fill demo credentials
-  function fillLogin(user, pwd) {
-    document.getElementById('username').value = user;
-    pwdInput.value = pwd;
-    showError('');
-    document.getElementById('username').focus();
-  }
-
   // Show/hide error
   function showError(msg) {
     errEl.textContent = msg;
@@ -141,16 +120,32 @@
     }
   }
 
+  // Alternar entre Login e Registro
+  let isRegisterMode = false;
+  const formTitle = document.getElementById('formTitle');
+  const toggleMode = document.getElementById('toggleMode');
+  const toggleText = document.getElementById('toggleText');
+
+  toggleMode.addEventListener('click', (e) => {
+    e.preventDefault();
+    isRegisterMode = !isRegisterMode;
+    formTitle.textContent = isRegisterMode ? 'Criar Conta' : 'Entrar';
+    loginBtn.querySelector('.btn-text').textContent = isRegisterMode ? 'Cadastrar' : 'Entrar';
+    toggleText.textContent = isRegisterMode ? 'Já tem uma conta?' : 'Ainda não tem uma conta?';
+    toggleMode.textContent = isRegisterMode ? 'Fazer login' : 'Criar conta';
+    showError('');
+  });
+
   // Form submit
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     showError('');
 
-    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('username').value.trim();
     const password = pwdInput.value;
 
-    if (!username || !password) {
-      showError('Preencha usuário e senha.');
+    if (!email || !password) {
+      showError('Preencha e-mail e senha.');
       return;
     }
 
@@ -158,17 +153,20 @@
     loginBtn.classList.add('loading');
     loginBtn.disabled = true;
 
-    await new Promise(r => setTimeout(r, 800)); // UX: simula loading
+    let result;
+    if (isRegisterMode) {
+      result = await Auth.register(email, password);
+    } else {
+      result = await Auth.login(email, password);
+    }
 
-    const { ok, error } = Auth.login(username, password);
-
-    if (ok) {
-      loginBtn.querySelector('.btn-text').textContent = '✓ Entrando...';
+    if (result.ok) {
+      loginBtn.querySelector('.btn-text').textContent = isRegisterMode ? '✓ Conta criada!' : '✓ Entrando...';
       setTimeout(() => { window.location.href = 'home.html'; }, 400);
     } else {
       loginBtn.classList.remove('loading');
       loginBtn.disabled = false;
-      showError(error);
+      showError(result.error);
     }
   });
 

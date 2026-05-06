@@ -9,12 +9,14 @@ const MyListManager = {
     if (!list.find(i => i.id === item.id)) {
       list.push(item);
       localStorage.setItem('heken_mylist', JSON.stringify(list));
+      if (typeof Auth !== 'undefined') Auth.syncToCloud();
       showToast('Adicionado à Minha Lista');
     }
   },
   remove(id) {
     const list = this.get().filter(i => i.id !== id);
     localStorage.setItem('heken_mylist', JSON.stringify(list));
+    if (typeof Auth !== 'undefined') Auth.syncToCloud();
     showToast('Removido da Minha Lista');
   },
   has(id) { return !!this.get().find(i => i.id === id); },
@@ -28,12 +30,11 @@ const HistoryManager = {
   get() { return JSON.parse(localStorage.getItem('heken_history') || '[]'); },
   add(item) {
     let list = this.get();
-    // Remover se já existir para colocar no topo
     list = list.filter(i => i.id !== item.id);
-    list.unshift(item); // Adiciona no início
-    // Limitar histórico para 20 itens
+    list.unshift(item);
     if (list.length > 20) list.pop();
     localStorage.setItem('heken_history', JSON.stringify(list));
+    if (typeof Auth !== 'undefined') Auth.syncToCloud();
   }
 };
 
