@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAy2kndP6mf7Hl7hJSZSSl8hMTXfL0BQlw",
+  apiKey: "AIzaSyAy2kndP6mf7Hl7hJSZSsl8hMTXflOBqlw",
   authDomain: "heken-streaming.firebaseapp.com",
   projectId: "heken-streaming",
   storageBucket: "heken-streaming.firebasestorage.app",
