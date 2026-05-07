@@ -23,15 +23,11 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://embed.warezcdn.com/filme/${id}`,       // Fonte 2 (Dublado BR)
     id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 3 (Multi)
-    id => `https://vidsrc.xyz/embed/movie?tmdb=${id}`,    // Fonte 4 (Legendado Estável)
     id => `https://vidsrc.cc/v2/embed/movie/${id}`,       // Fonte 5 (Legendado 1080p)
   ],
   tv: [
-    (id, s, e) => `https://embed.warezcdn.com/serie/${id}/${s}/${e}`,
     (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
-    (id, s, e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
     (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
   ],
 };
