@@ -22,8 +22,16 @@ const PROXIES = [
 
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
-  movie: [],
-  tv: [],
+  movie: [
+    id => `https://embed.warezcdn.com/movie/${id}`,
+    id => `https://player.vidsrc.nl/embed/movie/${id}`,
+    id => `https://autoembed.to/movie/tmdb/${id}`
+  ],
+  tv: [
+    (id, s, e) => `https://embed.warezcdn.com/serie/${id}/${s}/${e}`,
+    (id, s, e) => `https://player.vidsrc.nl/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://autoembed.to/tv/tmdb/${id}-${s}-${e}`
+  ],
 };
 
 const GENRE_IDS = { action: 28, comedy: 35, horror: 27, documentary: 99, animation: 16, drama: 18, scifi: 878, thriller: 53, romance: 10749, family: 10751 };
@@ -97,8 +105,8 @@ const TMDB = {
   },
   streamSources: (type) => (STREAM_SOURCES[type] || STREAM_SOURCES.movie).length,
   streamSourceName: (idx) => {
-    const names = ["Fonte 1", "Fonte 2"];
-    return names[idx % names.length];
+    const names = ["Fonte 1", "Fonte 2", "Fonte 3", "Fonte 4"];
+    return names[idx] || `Fonte ${idx + 1}`;
   },
   formatRating: (v) => v ? v.toFixed(1) : '—',
   formatYear: (s) => s ? s.slice(0, 4) : '',
@@ -109,8 +117,16 @@ const TMDB = {
   },
   async getTrailer(id, type = 'movie') {
     try {
-      const data = await fetchTMDB(`/${type}/${id}/videos`, { language: 'pt-BR,en-US' });
-      const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+      // Tenta PT-BR primeiro
+      let data = await fetchTMDB(`/${type}/${id}/videos`, { language: 'pt-BR' });
+      let trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+
+      if (!trailer) {
+        // Fallback para EN-US se não achar PT-BR
+        data = await fetchTMDB(`/${type}/${id}/videos`, { language: 'en-US' });
+        trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
+      }
+
       return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0` : null;
     } catch (e) {
       console.warn('Falha ao buscar trailer:', e);

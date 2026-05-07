@@ -192,11 +192,16 @@ async function buildEpisodes(goToLast = false) {
 // ── Source buttons ───────────────────────
 function buildSourceBtns() {
   const wrap = document.getElementById('sourceOptions');
+  const btnTrailer = document.getElementById('btnTrailer');
   if (!wrap) return;
+
   const count = TMDB.streamSources(currentType);
   wrap.innerHTML = Array.from({ length: count }, (_, i) =>
     `<button class="source-btn${i===currentSource?' active':''}" onclick="switchSource(${i})">${TMDB.streamSourceName(i)}</button>`
   ).join('');
+
+  // Remove active do trailer se estiver mudando para fonte
+  if (btnTrailer) btnTrailer.classList.remove('active');
 }
 
 function switchSource(i) {
@@ -307,9 +312,14 @@ function initControls() {
   document.getElementById('backBtn')?.addEventListener('click', goBack);
   document.getElementById('unavailableBack')?.addEventListener('click', goBack);
   document.getElementById('retryBtn')?.addEventListener('click', () => {
-    currentSource = (currentSource + 1) % TMDB.streamSources(currentType);
-    buildSourceBtns();
-    reloadFrame();
+    const count = TMDB.streamSources(currentType);
+    if (count > 0) {
+      currentSource = (currentSource + 1) % count;
+      buildSourceBtns();
+      reloadFrame();
+    } else {
+      alert('Nenhuma fonte disponível no momento.');
+    }
   });
 
   // Trailer button
