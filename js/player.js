@@ -239,6 +239,7 @@ function loadPlayer() {
   }
 
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
+  frame.referrerPolicy = 'no-referrer';
   frame.src = url;
 
   // Mostra loading até o iframe carregar
@@ -269,6 +270,7 @@ function reloadFrame() {
   }
 
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
+  frame.referrerPolicy = 'no-referrer';
   frame.src = url;
 
   if (currentType === 'tv' && details) {
@@ -332,6 +334,7 @@ function initControls() {
     const trailerUrl = await TMDB.getTrailer(currentId, currentType);
     
     if (trailerUrl) {
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
       frame.src = trailerUrl;
       document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('btnTrailer').classList.add('active');
