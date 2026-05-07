@@ -23,12 +23,12 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 3 (Multi)
     id => `https://vidsrc.cc/v2/embed/movie/${id}`,       // Fonte 5 (Legendado 1080p)
+    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 3 (Multi)
   ],
   tv: [
-    (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
     (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   ],
 };
 
@@ -102,7 +102,7 @@ const TMDB = {
   },
   streamSources: (type) => (STREAM_SOURCES[type] || STREAM_SOURCES.movie).length,
   streamSourceName: (idx) => {
-    const names = ["Dublado 1 (BR)", "Dublado 2 (BR)", "Multi-Idioma", "Legendado", "Legendado 1080p"];
+    const names = ["Fonte 1", "Fonte 2"];
     return names[idx % names.length];
   },
   formatRating: (v) => v ? v.toFixed(1) : '—',
