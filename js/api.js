@@ -23,15 +23,15 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://vidsrc.to/embed/movie/${id}`,
-    id => `https://embed.warezcdn.link/movie/${id}`,
-    id => `https://supervideo.tv/e/${id}`
+    function(id) { return 'https://vidsrc.to/embed/movie/' + id; },
+    function(id) { return 'https://embed.warezcdn.link/movie/' + id; },
+    function(id) { return 'https://supervideo.tv/e/' + id; }
   ],
   tv: [
-    (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://embed.warezcdn.link/serie/${id}/${s}/${e}`,
-    (id, s, e) => `https://supervideo.tv/e/${id}/${s}/${e}`
-  ],
+    function(id, s, e) { return 'https://vidsrc.to/embed/tv/' + id + '/' + s + '/' + e; },
+    function(id, s, e) { return 'https://embed.warezcdn.link/serie/' + id + '/' + s + '/' + e; },
+    function(id, s, e) { return 'https://supervideo.tv/e/' + id + '/' + s + '/' + e; }
+  ]
 };
 
 const GENRE_IDS = { action: 28, comedy: 35, horror: 27, documentary: 99, animation: 16, drama: 18, scifi: 878, thriller: 53, romance: 10749, family: 10751 };
@@ -103,10 +103,13 @@ const TMDB = {
     const f = list[idx % list.length];
     return type === 'movie' ? f(id) : f(id, s, e);
   },
-  streamSources: (type) => (STREAM_SOURCES[type] || STREAM_SOURCES.movie).length,
-  streamSourceName: (idx) => {
-    const names = ["Fonte 1", "Fonte 2", "Fonte 3", "Fonte 4"];
-    return names[idx] || `Fonte ${idx + 1}`;
+  streamSources: function(type) {
+    var list = STREAM_SOURCES[type] || STREAM_SOURCES.movie || [];
+    return list.length;
+  },
+  streamSourceName: function(idx) {
+    var names = ["Fonte 1", "Fonte 2", "Fonte 3", "Fonte 4"];
+    return names[idx] || ("Fonte " + (idx + 1));
   },
   formatRating: (v) => v ? v.toFixed(1) : '—',
   formatYear: (s) => s ? s.slice(0, 4) : '',

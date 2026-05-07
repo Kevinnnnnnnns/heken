@@ -196,9 +196,19 @@ function buildSourceBtns() {
   if (!wrap) return;
 
   const count = TMDB.streamSources(currentType);
-  wrap.innerHTML = Array.from({ length: count }, (_, i) =>
-    `<button class="source-btn${i===currentSource?' active':''}" onclick="switchSource(${i})">${TMDB.streamSourceName(i)}</button>`
-  ).join('');
+  var html = '';
+  
+  if (count > 0) {
+    for (var i = 0; i < count; i++) {
+      var isActive = (i === currentSource) ? ' active' : '';
+      html += '<button class="source-btn' + isActive + '" onclick="switchSource(' + i + ')">' + TMDB.streamSourceName(i) + '</button>';
+    }
+  } else {
+    // Fallback de segurança caso a lista falhe
+    html = '<button class="source-btn active" onclick="reloadFrame()">Fonte Principal</button>';
+  }
+  
+  wrap.innerHTML = html;
 
   // Remove active do trailer se estiver mudando para fonte
   if (btnTrailer) btnTrailer.classList.remove('active');
