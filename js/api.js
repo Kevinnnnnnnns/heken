@@ -23,14 +23,14 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    id => `https://embed.warezcdn.com/movie/${id}`,
-    id => `https://player.vidsrc.nl/embed/movie/${id}`,
-    id => `https://autoembed.to/movie/tmdb/${id}`
+    id => `https://vidsrc.to/embed/movie/${id}`,
+    id => `https://embed.warezcdn.link/movie/${id}`,
+    id => `https://supervideo.tv/e/${id}`
   ],
   tv: [
-    (id, s, e) => `https://embed.warezcdn.com/serie/${id}/${s}/${e}`,
-    (id, s, e) => `https://player.vidsrc.nl/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://autoembed.to/tv/tmdb/${id}-${s}-${e}`
+    (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://embed.warezcdn.link/serie/${id}/${s}/${e}`,
+    (id, s, e) => `https://supervideo.tv/e/${id}/${s}/${e}`
   ],
 };
 
@@ -127,7 +127,7 @@ const TMDB = {
         trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.results[0];
       }
 
-      return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0` : null;
+      return trailer ? `https://www.youtube.com/embed/${trailer.key}` : null;
     } catch (e) {
       console.warn('Falha ao buscar trailer:', e);
       return null;
