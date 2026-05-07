@@ -22,14 +22,8 @@ const PROXIES = [
 
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
-  movie: [
-    id => `https://vidsrc.cc/v2/embed/movie/${id}`,       // Fonte 5 (Legendado 1080p)
-    id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`, // Fonte 3 (Multi)
-  ],
-  tv: [
-    (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
-  ],
+  movie: [],
+  tv: [],
 };
 
 const GENRE_IDS = { action: 28, comedy: 35, horror: 27, documentary: 99, animation: 16, drama: 18, scifi: 878, thriller: 53, romance: 10749, family: 10751 };
@@ -97,6 +91,7 @@ const TMDB = {
   seasons: (id, n) => fetchTMDB(`/tv/${id}/season/${n}`),
   streamUrl: (id, type, s, e, idx) => {
     const list = STREAM_SOURCES[type] || STREAM_SOURCES.movie;
+    if (!list.length) return '';
     const f = list[idx % list.length];
     return type === 'movie' ? f(id) : f(id, s, e);
   },

@@ -226,6 +226,13 @@ function loadPlayer() {
 
   hideUnavailable();
   clearTimeout(streamTimeout);
+
+  if (!TMDB.streamSources(currentType)) {
+    frame.removeAttribute('src');
+    showUnavailable();
+    return;
+  }
+
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
   frame.src = url;
 
@@ -249,6 +256,13 @@ function reloadFrame() {
   hideUnavailable();
   clearTimeout(streamTimeout);
   loading?.classList.remove('hidden');
+
+  if (!TMDB.streamSources(currentType)) {
+    frame.removeAttribute('src');
+    showUnavailable();
+    return;
+  }
+
   const url = TMDB.streamUrl(currentId, currentType, currentSeason, currentEpisode, currentSource);
   frame.src = url;
 
