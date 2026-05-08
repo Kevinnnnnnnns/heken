@@ -23,14 +23,16 @@ const PROXIES = [
 // 🎬 Lista de Fontes com Foco em Burlar Bloqueios
 const STREAM_SOURCES = {
   movie: [
-    function(id) { return 'https://vidsrc.to/embed/movie/' + id; },
+    function(id) { return 'https://embed.su/embed/movie/' + id; },
+    function(id) { return 'https://vidsrc.me/embed/movie?tmdb=' + id; },
     function(id) { return 'https://embed.warezcdn.link/movie/' + id; },
-    function(id) { return 'https://supervideo.tv/e/' + id; }
+    function(id) { return 'https://player.autoembed.to/movie/' + id; }
   ],
   tv: [
-    function(id, s, e) { return 'https://vidsrc.to/embed/tv/' + id + '/' + s + '/' + e; },
+    function(id, s, e) { return 'https://embed.su/embed/tv/' + id + '/' + s + '/' + e; },
+    function(id, s, e) { return 'https://vidsrc.me/embed/tv?tmdb=' + id + '&sea=' + s + '&epi=' + e; },
     function(id, s, e) { return 'https://embed.warezcdn.link/serie/' + id + '/' + s + '/' + e; },
-    function(id, s, e) { return 'https://supervideo.tv/e/' + id + '/' + s + '/' + e; }
+    function(id, s, e) { return 'https://player.autoembed.to/tv/' + id + '/' + s + '/' + e; }
   ]
 };
 
